@@ -1,101 +1,247 @@
-import Image from "next/image";
+"use client";
+import { Key } from "@/components/ui/key";
+import { cn } from "@/lib/utils";
+import { Diff, Divide, Equal, Minus, Percent, Plus, X } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [total, setTotal] = useState<string>("0");
+  const [input, setInput] = useState<string | null>(null);
+  const [operation, setOperation] = useState<string | null>(null);
+  const isInputEmpty = input === null || input === "0";
+  const numbers: number[] = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+  const displayLength =
+    input !== null ? input.toString().length : total.toString().length;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Function to handle clear and all clear
+  const handleClear = () => {
+    if (input === null && total === "0") return;
+    if (input !== null && input !== "0" && operation) {
+      setInput("0");
+    } else {
+      setInput(null);
+      setTotal("0");
+      setOperation(null);
+    }
+  };
+
+  const getFormatedValue = (value: string) => {
+    const language = "en-US";
+
+    let formattedValue = parseFloat(value).toLocaleString(language, {
+      useGrouping: true,
+      maximumFractionDigits: 7,
+    });
+
+    const match = /\.\d*?(0*)$/.exec(value);
+
+    if (match) {
+      formattedValue += /[1-9]/.test(match[0]) ? match[1] : match[0];
+    }
+
+    return formattedValue.length >= 10
+      ? parseFloat(value).toExponential(6).toString()
+      : formattedValue;
+  };
+
+  // Function to handle when numbers are clicked
+  const handleInput = (value: string) => {
+    // Prevent multiple leading zeros
+    if ((input === null || input === "0") && value === "0") return;
+
+    // Prevent length from exceeding 9 digits
+    if (input !== null && input.replace(".", "").length === 9) return;
+
+    // Concatenate or set the new input
+    if (input !== null && input !== "0") {
+      // Check if we are trying to add a decimal point
+      if (value === "." && input.includes(".")) return; // Prevent multiple decimals
+      const concat = input.concat(value);
+      setInput(concat);
+    } else {
+      // Handle initial input
+      if (value === ".") {
+        setInput("0" + value); // Start with "0."
+      } else {
+        setInput(value); // Set the new value directly
+      }
+    }
+  };
+
+  // Function to return when arithmetic operations
+  const calculate = (operator: string) => {
+    switch (operator) {
+      case "plus":
+        return parseFloat(total) + parseFloat(input || "0");
+      case "minus":
+        return parseFloat(total) - parseFloat(input || "0");
+      case "divide":
+        return parseFloat(total) / parseFloat(input || "0");
+      case "multiply":
+        return parseFloat(total) * parseFloat(input || "0");
+    }
+  };
+
+  // Function to handle when operations are clicked
+  const handleOperation = (operator: string) => {
+    if (!input && total === "0") return;
+    setOperation(operator);
+    if (input !== null) {
+      if (total !== "0") {
+        const newTotal = calculate(operator)?.toString() || "0";
+        setTotal(newTotal);
+      } else {
+        setTotal(input);
+      }
+    }
+    setInput(null);
+  };
+
+  // Function to handle when diff is clicked
+  const handleDiff = () => {
+    if (input !== null) {
+      setInput((prev) => prev && (parseFloat(prev) * -1).toString());
+    }
+  };
+
+  // Function to handle when percentage is clicked
+  const percentage = () => {
+    if (input && input !== "0") {
+      const newValue: number = parseFloat(input) / 100;
+      setInput(getFormatedValue(newValue.toString()));
+    }
+  };
+
+  // Function to handle when equal is clicked
+  const handleEqual = () => {
+    if (total && operation && input !== null) {
+      const newTotal = calculate(operation)?.toString() || "0";
+      setTotal(newTotal);
+      setOperation(null);
+      setInput(null);
+    } else {
+      return;
+    }
+  };
+
+  const formatNumber = (value: string) => {
+    // Split the input into integer and decimal parts
+    const [integerPart, decimalPart] = value.split(".");
+
+    // Format the integer part with commas
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    return decimalPart !== undefined
+      ? `${formattedInteger}${decimalPart ? "." + decimalPart : "."}`
+      : formattedInteger;
+  };
+
+  return (
+    <main className="h-full md:h-auto w-full max-w-md flex flex-col space-y-4 md:rounded-3xl bg-black p-10 text-white landscape:hidden lg:landscape:flex overflow-hidden">
+      <div className="flex grow items-end min-h-fit">
+        <div
+          className={cn(
+            "w-full text-right font-thin",
+            displayLength > 7
+              ? "text-5xl"
+              : displayLength > 5
+              ? "text-6xl"
+              : "text-7xl"
+          )}
+        >
+          {input !== null ? formatNumber(input) : getFormatedValue(total)}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+
+      <div className="grid grid-cols-4 gap-3 bg-black">
+        <div className="col-span-3 space-y-3">
+          <div className="grid grid-cols-3 gap-3 text-black">
+            <Key
+              variant="function"
+              className="text-3xl tracking-tighter"
+              onClick={handleClear}
+            >
+              {input === null && total === "0" ? "AC" : "C"}
+            </Key>
+            <Key variant="function" onClick={handleDiff}>
+              <Diff className="size-8" />
+            </Key>
+            <Key variant="function">
+              <Percent className="size-8" onClick={percentage} />
+            </Key>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            {numbers.map((number, index) => (
+              <Key
+                variant="number"
+                key={index}
+                onClick={() => handleInput(number.toString())}
+              >
+                {number}
+              </Key>
+            ))}
+            <Key
+              className="col-span-2 aspect-auto h-full justify-start pl-[15%]"
+              variant="number"
+              onClick={() => handleInput("0")}
+            >
+              0
+            </Key>
+            <Key variant="number" onClick={() => handleInput(".")}>
+              .
+            </Key>
+          </div>
+        </div>
+        <div className="col-span-1 grid gap-3">
+          <Key
+            className={
+              operation === "divide" && isInputEmpty
+                ? "bg-white hover:bg-white/90 group is-dirty"
+                : ""
+            }
+            variant="operator"
+            onClick={() => handleOperation("divide")}
+          >
+            <Divide className="group-[.is-dirty]:text-amber-500 size-8" />
+          </Key>
+          <Key
+            className={
+              operation === "multiply" && isInputEmpty
+                ? "bg-white hover:bg-white/90 group is-dirty"
+                : ""
+            }
+            variant="operator"
+            onClick={() => handleOperation("multiply")}
+          >
+            <X className="group-[.is-dirty]:text-amber-500 size-8" />
+          </Key>
+          <Key
+            className={
+              operation === "minus" && isInputEmpty
+                ? "bg-white hover:bg-white/90 group is-dirty"
+                : ""
+            }
+            variant="operator"
+            onClick={() => handleOperation("minus")}
+          >
+            <Minus className="group-[.is-dirty]:text-amber-500 size-8" />
+          </Key>
+          <Key
+            className={
+              operation === "plus" && isInputEmpty
+                ? "bg-white hover:bg-white/90 group is-dirty"
+                : ""
+            }
+            variant="operator"
+            onClick={() => handleOperation("plus")}
+          >
+            <Plus className="group-[.is-dirty]:text-amber-500 size-8" />
+          </Key>
+          <Key variant="operator" onClick={handleEqual}>
+            <Equal className="size-8" />
+          </Key>
+        </div>
+      </div>
+    </main>
   );
 }
