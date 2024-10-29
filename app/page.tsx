@@ -4,10 +4,17 @@ import { cn } from "@/lib/utils";
 import { Diff, Divide, Equal, Minus, Percent, Plus, X } from "lucide-react";
 import { useState } from "react";
 
+enum Operations {
+  PLUS = "plus",
+  MINUS = "minus",
+  DIVIDE = "divide",
+  MULTIPLY = "multiply",
+}
+
 export default function Home() {
   const [total, setTotal] = useState<string>("0");
   const [input, setInput] = useState<string | null>(null);
-  const [operation, setOperation] = useState<string | null>(null);
+  const [operation, setOperation] = useState<Operations | null>(null);
   const isInputEmpty = input === null || input === "0";
   const numbers: number[] = [7, 8, 9, 4, 5, 6, 1, 2, 3];
   const displayLength =
@@ -68,27 +75,34 @@ export default function Home() {
     }
   };
 
-  // Function to return when arithmetic operations
-  const calculate = (operator: string) => {
+  const calculate = (operator: Operations, a: number, b: number) => {
     switch (operator) {
-      case "plus":
-        return parseFloat(total) + parseFloat(input || "0");
-      case "minus":
-        return parseFloat(total) - parseFloat(input || "0");
-      case "divide":
-        return parseFloat(total) / parseFloat(input || "0");
-      case "multiply":
-        return parseFloat(total) * parseFloat(input || "0");
+      case Operations.PLUS:
+        return a + b;
+      case Operations.MINUS:
+        return a - b;
+      case Operations.DIVIDE:
+        return b !== 0 ? a / b : 0; // Prevent division by zero
+      case Operations.MULTIPLY:
+        return a * b;
+      default:
+        return b;
     }
   };
 
   // Function to handle when operations are clicked
-  const handleOperation = (operator: string) => {
+  const handleOperation = (operator: Operations) => {
     if (!input && total === "0") return;
     setOperation(operator);
     if (input !== null) {
       if (total !== "0") {
-        const newTotal = calculate(operator)?.toString() || "0";
+        const currentValue = parseFloat(input);
+        const previousValue = parseFloat(total);
+        const newTotal = calculate(
+          operator,
+          previousValue,
+          currentValue
+        ).toString();
         setTotal(newTotal);
       } else {
         setTotal(input);
@@ -115,7 +129,13 @@ export default function Home() {
   // Function to handle when equal is clicked
   const handleEqual = () => {
     if (total && operation && input !== null) {
-      const newTotal = calculate(operation)?.toString() || "0";
+      const currentValue = parseFloat(input);
+      const previousValue = parseFloat(total);
+      const newTotal = calculate(
+        operation,
+        previousValue,
+        currentValue
+      ).toString();
       setTotal(newTotal);
       setOperation(null);
       setInput(null);
@@ -200,7 +220,7 @@ export default function Home() {
                 : ""
             }
             variant="operator"
-            onClick={() => handleOperation("divide")}
+            onClick={() => handleOperation("divide" as Operations)}
           >
             <Divide className="group-[.is-dirty]:text-amber-500 size-8" />
           </Key>
@@ -211,7 +231,7 @@ export default function Home() {
                 : ""
             }
             variant="operator"
-            onClick={() => handleOperation("multiply")}
+            onClick={() => handleOperation("multiply" as Operations)}
           >
             <X className="group-[.is-dirty]:text-amber-500 size-8" />
           </Key>
@@ -222,7 +242,7 @@ export default function Home() {
                 : ""
             }
             variant="operator"
-            onClick={() => handleOperation("minus")}
+            onClick={() => handleOperation("minus" as Operations)}
           >
             <Minus className="group-[.is-dirty]:text-amber-500 size-8" />
           </Key>
@@ -233,7 +253,7 @@ export default function Home() {
                 : ""
             }
             variant="operator"
-            onClick={() => handleOperation("plus")}
+            onClick={() => handleOperation("plus" as Operations)}
           >
             <Plus className="group-[.is-dirty]:text-amber-500 size-8" />
           </Key>
