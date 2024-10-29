@@ -137,7 +137,7 @@ export default function Home() {
   };
 
   return (
-    <main className="h-full md:h-auto w-full max-w-md flex flex-col space-y-4 md:rounded-3xl bg-black p-10 text-white landscape:hidden lg:landscape:flex overflow-hidden">
+    <main className="h-full md:h-auto w-full max-w-md md:max-w-sm flex flex-col space-y-4 md:rounded-3xl bg-black p-10 text-white landscape:hidden lg:landscape:flex overflow-hidden">
       <div className="flex grow items-end min-h-fit">
         <div
           className={cn(
