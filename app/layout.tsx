@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Calci",
-  description: "Apple Calculator Clone",
+  title: "iCalci",
+  description: "Apple Calculator Clone built with Next.js",
 };
 
 export default function RootLayout({
